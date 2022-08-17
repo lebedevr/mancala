@@ -1,0 +1,19 @@
+version: "2.3"
+
+services:
+  backend:
+    build:
+      context: ./
+      target: backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./
+      target: frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
