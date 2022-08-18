@@ -1,24 +1,28 @@
 package com.lebedevrs9.mancala.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import java.io.Serializable;
-
+import java.util.Map;
+import java.util.Set;
 
 @Data
 @RedisHash("Game")
-public class Game implements Serializable {
+public class Game {
 
     public enum Status {
         WAITING, STARTED
     }
 
-    @JsonIgnore
-    private GameParams params = GameParams.INSTANCE;
+    public static final Map<Integer, Set<Integer>> indexesByPlayer = Map.of(
+            1, Set.of(1, 2, 3, 4, 5, 6),
+            2, Set.of(8, 9, 10, 11, 12, 13)
+    );
+
+    public static final int boardSize = 14;
+    public static final int playerSideSize = 6;
 
     @Id
     @Indexed
@@ -45,7 +49,7 @@ public class Game implements Serializable {
     @Indexed
     private Status status = Status.WAITING;
 
-    public synchronized boolean move(int player, int index) {
+    public boolean move(int player, int index) {
         if (!validateMove(player, index)) return false;
         int lastIndex = moveStones(index);
         checkForSteal(player, lastIndex);
@@ -65,25 +69,25 @@ public class Game implements Serializable {
     }
 
     private boolean checkGameEnd(int player) {
-        for (int i : params.indexesByPlayer.get(player))
+        for (int i : indexesByPlayer.get(player))
             if (board[i] != 0)
                 return false;
         return true;
     }
 
     private boolean validateMove(int player, int index) {
-        return currentPlayer == player && params.indexesByPlayer.get(player).contains(index) && board[index] != 0;
+        return currentPlayer == player && indexesByPlayer.get(player).contains(index) && board[index] != 0;
     }
 
     private int moveStones(int index) {
         int stones = board[index];
         board[index] = 0;
-        for (int i = index + 1; i <= index + stones; i++) board[i % params.boardSize]++;
-        return (index + stones) % params.boardSize;
+        for (int i = index + 1; i <= index + stones; i++) board[i % boardSize]++;
+        return (index + stones) % boardSize;
     }
 
     private void checkForSteal(int player, int lastIndex) {
-        if (params.indexesByPlayer.get(player).contains(lastIndex) &&
+        if (indexesByPlayer.get(player).contains(lastIndex) &&
                 board[lastIndex] == 1 &&
                 board[opposite(lastIndex)] != 0) {
             int toAdd = board[opposite(lastIndex)] + 1;
@@ -108,7 +112,7 @@ public class Game implements Serializable {
 
     private void moveAllToGoal(int player) {
         int toAdd = 0;
-        for (int i : params.indexesByPlayer.get(player)) {
+        for (int i : indexesByPlayer.get(player)) {
             toAdd += board[i];
             board[i] = 0;
         }

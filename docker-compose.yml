@@ -5,6 +5,8 @@ services:
     build:
       context: ./
       target: backend
+    depends_on:
+      - redis
     environment:
       - SPRING_REDIS_HOST=redis
     ports:

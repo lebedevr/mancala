@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lebedevrs9.mancala.model.Game;
-import com.lebedevrs9.mancala.model.GameParams;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,8 +16,6 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 public class GameTest {
-
-    private final GameParams params = GameParams.INSTANCE;
 
     @Test
     void checkInitialState() {
@@ -185,9 +182,9 @@ public class GameTest {
     }
 
     private int getRandomMove(int player) {
-        int r = new Random().nextInt(params.playerSideSize);
+        int r = new Random().nextInt(Game.playerSideSize);
         int i = 0;
-        for (int index : params.indexesByPlayer.get(player)) {
+        for (int index : Game.indexesByPlayer.get(player)) {
             if (i == r) return index;
             i++;
         }
