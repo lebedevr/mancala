@@ -19,15 +19,13 @@ public class MessagingController {
 
     @MessageMapping("/move/{id}")
     @SendTo("/mancala/state/{id}")
-    public Game move(@DestinationVariable Integer id, Move move) {
-        Game game = gameService.getGame(id);
-        game.move(move.getPlayer(), move.getIndex());
-        return game;
+    public Game move(@DestinationVariable String id, Move move) {
+        return gameService.move(id, move);
     }
 
     @MessageMapping("/join/{id}")
     @SendTo("/mancala/state/{id}")
-    public Game join(@DestinationVariable Integer id) {
+    public Game join(@DestinationVariable String id) {
         return gameService.getGame(id);
     }
 }

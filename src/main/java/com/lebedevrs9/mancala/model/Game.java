@@ -2,10 +2,16 @@ package com.lebedevrs9.mancala.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
+
+import java.io.Serializable;
 
 
 @Data
-public class Game {
+@RedisHash("Game")
+public class Game implements Serializable {
 
     public enum Status {
         WAITING, STARTED
@@ -14,7 +20,9 @@ public class Game {
     @JsonIgnore
     private GameParams params = GameParams.INSTANCE;
 
-    private int id;
+    @Id
+    @Indexed
+    private String id;
 
     private String name;
     private int[] board = {
@@ -34,6 +42,7 @@ public class Game {
 
     private boolean gameEnd = false;
 
+    @Indexed
     private Status status = Status.WAITING;
 
     public synchronized boolean move(int player, int index) {

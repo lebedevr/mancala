@@ -5,6 +5,8 @@ services:
     build:
       context: ./
       target: backend
+    environment:
+      - SPRING_REDIS_HOST=redis
     ports:
       - "8080:8080"
 
@@ -17,3 +19,7 @@ services:
     ports:
       - "3000:3000"
 
+  redis:
+    image: "redis"
+    ports:
+      - '6379:6379'

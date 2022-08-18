@@ -1,45 +1,54 @@
 package com.lebedevrs9.mancala.service;
 
 import com.lebedevrs9.mancala.model.Game;
+import com.lebedevrs9.mancala.model.Move;
+import com.lebedevrs9.mancala.repository.GameRepository;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 public class GameService {
-    private final Map<Integer, Game> games = new ConcurrentHashMap<>();
-
-    private final AtomicInteger idCounter = new AtomicInteger(0);
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final GameRepository gameRepository;
+    public GameService(
+            RedisTemplate<String, Object> redisTemplate,
+            GameRepository gameRepository
+    ) {
+        this.redisTemplate = redisTemplate;
+        this.gameRepository = gameRepository;
+    }
 
     public List<Game> getWaitingGames() {
-        return games.values()
-                .stream()
-                .filter(g -> g.getStatus() == Game.Status.WAITING)
-                .collect(Collectors.toList());
+        return gameRepository.findAllByStatus(Game.Status.WAITING);
     }
 
-    public Game getGame(Integer id) {
-        return games.get(id);
+    public Game getGame(String id) {
+        return gameRepository.findById(id).get();
     }
 
-    public Game addGame(@RequestBody Game game) {
-        int id = idCounter.incrementAndGet();
-        game.setId(id);
-        games.put(id, game);
-        return game;
+    public Game addGame(Game game) {
+        game.setId(
+                Objects.requireNonNull(redisTemplate.opsForValue().increment("playerId"))
+                        .toString()
+        );
+        return gameRepository.save(game);
     }
 
-    public Game join(Integer id, String playerId) {
-        Game game = games.get(id);
+    public Game move(String id, Move move) {
+        Game game = gameRepository.findById(id).get();
+        game.move(move.getPlayer(), move.getIndex());
+        return gameRepository.save(game);
+    }
+
+    public Game join(String id, String playerId) {
+        Game game = gameRepository.findById(id).get();
         if (!playerId.equals(game.getFirstPlayer())) {
             game.setSecondPlayer(playerId);
             game.setStatus(Game.Status.STARTED);
         }
-        return game;
+        return gameRepository.save(game);
     }
 }
